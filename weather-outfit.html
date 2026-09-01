@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오늘 뭐 입지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  :root{
+    --bg-1:#1b2f3f;
+    --bg-2:#2c4a55;
+    --accent:#7fd9c4;
+    --ink:#f4f7f6;
+    --ink-dim:rgba(244,247,246,0.62);
+    --line:rgba(244,247,246,0.16);
+    --panel:rgba(255,255,255,0.05);
+    transition: --bg-1 .6s;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: radial-gradient(circle at 15% -10%, var(--bg-2), var(--bg-1) 60%);
+    background-attachment: fixed;
+    color:var(--ink);
+    min-height:100vh;
+    transition: background .8s ease;
+  }
+  .num{font-family:'Space Grotesk', 'Pretendard', sans-serif;}
+
+  .wrap{max-width:640px; margin:0 auto; padding:28px 20px 80px;}
+
+  header{margin-bottom:22px;}
+  .title{font-size:15px; letter-spacing:.01em; color:var(--ink-dim); margin:0 0 4px;}
+  h1{font-size:22px; font-weight:600; margin:0 0 20px; line-height:1.35;}
+
+  .search-row{display:flex; gap:8px; margin-bottom:12px;}
+  .search-row input{
+    flex:1; min-width:0;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    color:var(--ink); font-size:15px; padding:11px 14px;
+    font-family:inherit;
+  }
+  .search-row input::placeholder{color:var(--ink-dim);}
+  .search-row input:focus{outline:1px solid var(--accent); outline-offset:1px;}
+  .icon-btn{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    color:var(--ink); padding:0 14px; font-size:14px; cursor:pointer; white-space:nowrap;
+    font-family:inherit;
+  }
+  .icon-btn:hover{border-color:var(--accent);}
+  .icon-btn:focus-visible, .chip:focus-visible, .search-row input:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  #suggest{list-style:none; margin:0 0 12px; padding:0; display:none;}
+  #suggest li{
+    padding:10px 14px; border:1px solid var(--line); border-top:none; cursor:pointer; font-size:14px;
+    background:var(--panel);
+  }
+  #suggest li:first-child{border-top:1px solid var(--line); border-radius:10px 10px 0 0;}
+  #suggest li:last-child{border-radius:0 0 10px 10px;}
+  #suggest li:hover{background:rgba(255,255,255,0.1);}
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:28px;}
+  .chip{
+    background:transparent; border:1px solid var(--line); color:var(--ink-dim);
+    border-radius:999px; padding:6px 13px; font-size:13px; cursor:pointer; font-family:inherit;
+  }
+  .chip.active{border-color:var(--accent); color:var(--ink); background:rgba(127,217,196,0.12);}
+
+  .hero{padding:6px 0 30px; border-bottom:1px solid var(--line); margin-bottom:26px;}
+  .hero-top{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .place{font-size:16px; color:var(--ink-dim);}
+  .updated{font-size:12px; color:var(--ink-dim);}
+  .temp-row{display:flex; align-items:flex-end; gap:16px; margin-top:10px;}
+  .temp-num{font-size:74px; font-weight:700; line-height:1; letter-spacing:-.02em;}
+  .weather-icon{width:56px; height:56px; color:var(--accent); flex-shrink:0;}
+  .desc-col{display:flex; flex-direction:column; gap:2px;}
+  .desc-main{font-size:16px; font-weight:500;}
+  .feels{font-size:13px; color:var(--ink-dim);}
+  .minmax{font-size:13px; color:var(--ink-dim); margin-top:10px;}
+
+  .section-label{font-size:12px; color:var(--ink-dim); margin:0 0 12px;}
+
+  .outfit-list{margin-bottom:26px;}
+  .outfit-item{
+    display:flex; gap:14px; padding:14px 0; border-top:1px solid var(--line);
+  }
+  .outfit-item:last-child{border-bottom:1px solid var(--line);}
+  .outfit-icon{width:22px; height:22px; flex-shrink:0; color:var(--accent); margin-top:2px;}
+  .outfit-cat{font-size:12px; color:var(--ink-dim); margin:0 0 3px;}
+  .outfit-desc{font-size:15px; line-height:1.5; margin:0;}
+
+  .advisory{
+    display:flex; gap:12px; align-items:flex-start;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:16px; margin-bottom:14px;
+  }
+  .advisory-icon{width:22px; height:22px; flex-shrink:0; color:var(--accent); margin-top:1px;}
+  .advisory p{margin:0; font-size:14px; line-height:1.55;}
+  .advisory .head{font-size:13px; font-weight:600; margin-bottom:3px;}
+
+  .hourly{display:flex; gap:6px; margin-top:26px; padding-top:20px; border-top:1px solid var(--line);}
+  .hour-col{flex:1; text-align:center; font-size:11px; color:var(--ink-dim);}
+  .hour-bar-track{height:70px; display:flex; align-items:flex-end; justify-content:center; margin:8px 0;}
+  .hour-bar{width:10px; border-radius:4px; background:var(--accent); opacity:.75;}
+  .hour-pct{font-size:11px; color:var(--ink); margin-bottom:2px;}
+
+  .state-msg{font-size:14px; color:var(--ink-dim); padding:20px 0;}
+
+  footer{margin-top:40px; font-size:11px; color:var(--ink-dim); line-height:1.6;}
+  footer a{color:var(--ink-dim);}
+
+  @media (max-width:420px){
+    .temp-num{font-size:58px;}
+    .weather-icon{width:44px; height:44px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="title">오늘 뭐 입지</p>
+    <h1>도시를 고르면 오늘 체감 온도에 맞는 옷차림을 알려드려요.</h1>
+
+    <div class="search-row">
+      <input type="text" id="cityInput" placeholder="도시 이름 검색 (예: 춘천, 여수)" autocomplete="off">
+      <button class="icon-btn" id="searchBtn">검색</button>
+      <button class="icon-btn" id="geoBtn" title="현재 위치 사용">내 위치</button>
+    </div>
+    <ul id="suggest"></ul>
+
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <main id="main">
+    <p class="state-msg">날씨를 불러오는 중이에요.</p>
+  </main>
+
+  <footer>
+    날씨 데이터 제공: Open-Meteo · 체감 온도 기준 옷차림 추천이며 실제 날씨는 지역/시간에 따라 다를 수 있어요.
+  </footer>
+</div>
+
+<script>
+const CITIES = [
+  {name:"서울", lat:37.5665, lon:126.9780},
+  {name:"인천", lat:37.4563, lon:126.7052},
+  {name:"수원", lat:37.2636, lon:127.0286},
+  {name:"춘천", lat:37.8813, lon:127.7298},
+  {name:"대전", lat:36.3504, lon:127.3845},
+  {name:"대구", lat:35.8714, lon:128.6014},
+  {name:"광주", lat:35.1595, lon:126.8526},
+  {name:"부산", lat:35.1796, lon:129.0756},
+  {name:"울산", lat:35.5384, lon:129.3114},
+  {name:"제주", lat:33.4996, lon:126.5312},
+];
+
+const chipsEl = document.getElementById('chips');
+const mainEl = document.getElementById('main');
+const cityInput = document.getElementById('cityInput');
+const suggestEl = document.getElementById('suggest');
+
+CITIES.forEach(c=>{
+  const b = document.createElement('button');
+  b.className = 'chip';
+  b.textContent = c.name;
+  b.dataset.name = c.name;
+  b.addEventListener('click', ()=> loadWeather(c.lat, c.lon, c.name, b));
+  chipsEl.appendChild(b);
+});
+
+document.getElementById('geoBtn').addEventListener('click', useMyLocation);
+document.getElementById('searchBtn').addEventListener('click', searchCity);
+cityInput.addEventListener('keydown', e=>{ if(e.key==='Enter') searchCity(); });
+
+function setActiveChip(name){
+  [...chipsEl.children].forEach(b=> b.classList.toggle('active', b.dataset.name===name));
+}
+
+function useMyLocation(){
+  if(!navigator.geolocation){
+    mainEl.innerHTML = '<p class="state-msg">이 브라우저는 위치 확인을 지원하지 않아요. 도시를 직접 검색해주세요.</p>';
+    return;
+  }
+  mainEl.innerHTML = '<p class="state-msg">위치를 확인하는 중이에요.</p>';
+  navigator.geolocation.getCurrentPosition(
+    pos => loadWeather(pos.coords.latitude, pos.coords.longitude, '현재 위치'),
+    () => { mainEl.innerHTML = '<p class="state-msg">위치 정보를 가져오지 못했어요. 도시를 검색하거나 아래에서 선택해주세요.</p>'; }
+  );
+}
+
+async function searchCity(){
+  const q = cityInput.value.trim();
+  if(!q) return;
+  suggestEl.style.display = 'none';
+  suggestEl.innerHTML = '';
+  try{
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=ko&format=json`);
+    const data = await res.json();
+    if(!data.results || data.results.length===0){
+      mainEl.innerHTML = '<p class="state-msg">검색 결과가 없어요. 다른 이름으로 시도해보세요.</p>';
+      return;
+    }
+    if(data.results.length===1){
+      const r = data.results[0];
+      loadWeather(r.latitude, r.longitude, r.name);
+      return;
+    }
+    suggestEl.style.display = 'block';
+    data.results.forEach(r=>{
+      const li = document.createElement('li');
+      const region = [r.admin1, r.country].filter(Boolean).join(', ');
+      li.textContent = region ? `${r.name} (${region})` : r.name;
+      li.addEventListener('click', ()=>{
+        suggestEl.style.display = 'none';
+        loadWeather(r.latitude, r.longitude, r.name);
+      });
+      suggestEl.appendChild(li);
+    });
+  }catch(err){
+    mainEl.innerHTML = '<p class="state-msg">검색 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.</p>';
+  }
+}
+
+// ---- weather code -> description / icon group ----
+function describeCode(code){
+  if(code===0) return {text:'맑음', group:'clear'};
+  if([1,2].includes(code)) return {text:'대체로 맑음', group:'clear'};
+  if(code===3) return {text:'흐림', group:'cloud'};
+  if([45,48].includes(code)) return {text:'안개', group:'fog'};
+  if([51,53,55,56,57].includes(code)) return {text:'이슬비', group:'rain'};
+  if([61,63,65,66,67,80,81,82].includes(code)) return {text:'비', group:'rain'};
+  if([71,73,75,77,85,86].includes(code)) return {text:'눈', group:'snow'};
+  if([95,96,99].includes(code)) return {text:'뇌우', group:'thunder'};
+  return {text:'흐림', group:'cloud'};
+}
+
+const ICONS = {
+  clear: `<circle cx="12" cy="12" r="4.2"/><g stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4.2"/><line x1="12" y1="19.8" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4.2" y2="12"/><line x1="19.8" y1="12" x2="22.5" y2="12"/><line x1="4.4" y1="4.4" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.6" y2="19.6"/><line x1="4.4" y1="19.6" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.6" y2="4.4"/></g>`,
+  cloud: `<path d="M6.5 18.5a4.3 4.3 0 0 1-.6-8.55A5.5 5.5 0 0 1 16.4 8.2a4.8 4.8 0 0 1-.9 10.3H6.5Z"/>`,
+  rain: `<path d="M6.5 14.5a4.3 4.3 0 0 1-.6-8.55A5.5 5.5 0 0 1 16.4 4.2a4.8 4.8 0 0 1-.9 10.3H6.5Z"/><g stroke-linecap="round"><line x1="8" y1="18" x2="7" y2="21.5"/><line x1="12" y1="18" x2="11" y2="21.5"/><line x1="16" y1="18" x2="15" y2="21.5"/></g>`,
+  snow: `<path d="M6.5 14.5a4.3 4.3 0 0 1-.6-8.55A5.5 5.5 0 0 1 16.4 4.2a4.8 4.8 0 0 1-.9 10.3H6.5Z"/><g stroke-linecap="round"><line x1="8" y1="18" x2="8" y2="22"/><line x1="6.3" y1="19.5" x2="9.7" y2="20.5"/><line x1="9.7" y1="19.5" x2="6.3" y2="20.5"/><line x1="15" y1="18" x2="15" y2="22"/><line x1="13.3" y1="19.5" x2="16.7" y2="20.5"/><line x1="16.7" y1="19.5" x2="13.3" y2="20.5"/></g>`,
+  fog: `<g stroke-linecap="round"><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="13" x2="18" y2="13"/><line x1="5" y1="17" x2="21" y2="17"/></g>`,
+  thunder: `<path d="M6.5 13.5a4.3 4.3 0 0 1-.6-8.55A5.5 5.5 0 0 1 16.4 3.2a4.8 4.8 0 0 1-.9 10.3H6.5Z"/><path d="M13 15l-3.4 5.2h3l-1.6 3.3 4.8-5.8h-3.1L15 15h-2Z" fill="currentColor" stroke="none"/>`,
+};
+
+function iconSvg(group, cls){
+  return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">${ICONS[group]||ICONS.cloud}</svg>`;
+}
+
+// ---- outfit recommendation ----
+const OUTFIT_ICONS = {
+  top: `<path d="M8 4l4 2 4-2 4 3-2 3-2-1v11H6V9L4 10 2 7z"/>`,
+  bottom: `<path d="M6 3h12l1 8-1 10h-4l-1-8-1 8H8l-1-10z"/>`,
+  outer: `<path d="M7 3l5 2 5-2 4 4-3 3-1-1v11H6V9l-1 1-3-3z"/><line x1="12" y1="5" x2="12" y2="19"/>`,
+  extra: `<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>`,
+};
+function outfitIcon(key){
+  return `<svg class="outfit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round">${OUTFIT_ICONS[key]}</svg>`;
+}
+
+const BANDS = [
+  {min:28, label:'한여름 더위', top:'민소매, 반팔 티, 얇은 린넨 셔츠', bottom:'반바지, 얇은 원피스', outer:null, extra:'양산이나 모자로 햇빛을 가려주세요'},
+  {min:23, label:'무난한 여름', top:'반팔 티, 얇은 셔츠, 블라우스', bottom:'반바지, 면바지, 짧은 치마', outer:null, extra:'실내 냉방이 강하면 얇은 가디건 하나쯤'},
+  {min:20, label:'선선한 초가을', top:'긴팔 티, 얇은 셔츠', bottom:'면바지, 청바지', outer:null, extra:'아침저녁으로 쌀쌀할 수 있어요'},
+  {min:17, label:'환절기', top:'얇은 니트, 맨투맨', bottom:'청바지, 면바지', outer:'가벼운 가디건이나 얇은 자켓', extra:''},
+  {min:12, label:'쌀쌀함', top:'니트, 맨투맨', bottom:'청바지', outer:'자켓, 트렌치코트', extra:''},
+  {min:9, label:'제법 추움', top:'니트, 기모 안감 상의', bottom:'기모 바지, 청바지', outer:'코트, 두꺼운 재킷', extra:'가벼운 목도리가 도움이 돼요'},
+  {min:5, label:'추움', top:'두꺼운 니트, 기모 안감 상의', bottom:'기모 바지', outer:'두꺼운 코트, 패딩', extra:'목도리와 장갑을 챙기세요'},
+  {min:-99, label:'한파', top:'기모 안감 상의, 히트텍', bottom:'기모 바지, 두꺼운 하의', outer:'두꺼운 패딩, 롱코트', extra:'목도리, 장갑, 방한모자까지 챙기면 좋아요'},
+];
+
+function pickBand(temp){
+  return BANDS.find(b => temp >= b.min) || BANDS[BANDS.length-1];
+}
+
+function renderOutfit(band, dayGap){
+  const items = [
+    {key:'top', cat:'상의', desc: band.top},
+    {key:'bottom', cat:'하의', desc: band.bottom},
+  ];
+  const needOuter = !!band.outer || dayGap >= 9;
+  if(needOuter){
+    items.push({key:'outer', cat:'아우터', desc: band.outer || '일교차가 크니 가벼운 겉옷 하나 챙기기'});
+  }
+  if(band.extra){
+    items.push({key:'extra', cat:'잡화', desc: band.extra});
+  }
+  return `<div class="outfit-list">` + items.map(it => `
+    <div class="outfit-item">
+      ${outfitIcon(it.key)}
+      <div>
+        <p class="outfit-cat">${it.cat}</p>
+        <p class="outfit-desc">${it.desc}</p>
+      </div>
+    </div>`).join('') + `</div>`;
+}
+
+function umbrellaAdvisory(precipMax, isSnowy){
+  let head, body;
+  if(isSnowy){
+    head = '눈 소식이 있어요';
+    body = '방수가 되는 신발을 신고, 우산도 하나 챙기면 안심이에요.';
+  } else if(precipMax >= 70){
+    head = '우산은 꼭 챙기세요';
+    body = '비가 올 가능성이 매우 높아요. 큰 우산이나 방수 겉옷이 도움이 됩니다.';
+  } else if(precipMax >= 40){
+    head = '우산을 챙기는 게 좋아요';
+    body = '오늘 중 비가 올 가능성이 있어요.';
+  } else if(precipMax >= 20){
+    head = '혹시 모르니 우산 하나';
+    body = '비가 올 확률이 낮은 편이지만, 접이식 우산 정도는 가방에 넣어두면 안심이에요.';
+  } else {
+    head = '우산 없이 다녀와도 괜찮아요';
+    body = '오늘은 비 올 가능성이 낮아요.';
+  }
+  return `<div class="advisory">
+      ${iconSvg('rain','advisory-icon')}
+      <div><p class="head">${head}</p><p>${body}</p></div>
+    </div>`;
+}
+
+function outerGapAdvisory(dayGap){
+  if(dayGap < 9) return '';
+  return `<div class="advisory">
+      ${iconSvg('clear','advisory-icon')}
+      <div><p class="head">일교차가 커요 (${dayGap.toFixed(0)}도)</p><p>낮과 밤 기온 차가 크니, 벗었다 입었다 할 수 있는 겉옷을 챙기는 게 좋아요.</p></div>
+    </div>`;
+}
+
+async function loadWeather(lat, lon, placeName, chipBtn){
+  mainEl.innerHTML = '<p class="state-msg">날씨를 불러오는 중이에요.</p>';
+  if(chipBtn) setActiveChip(chipBtn.dataset.name); else setActiveChip(null);
+
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+    + `&current=temperature_2m,apparent_temperature,precipitation,weather_code`
+    + `&hourly=precipitation_probability,temperature_2m`
+    + `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code`
+    + `&timezone=Asia%2FSeoul&forecast_days=1`;
+
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error(`서버 응답 오류 (상태 코드 ${res.status})`);
+    const data = await res.json();
+    render(data, placeName);
+  }catch(err){
+    mainEl.innerHTML = `<p class="state-msg">날씨 정보를 가져오지 못했어요.<br>
+      오류 내용: ${err.message || err}<br><br>
+      이 파일을 다운로드해서 브라우저에서 직접 열었는지 확인해주세요(채팅창 내 미리보기는 외부 요청이 막힐 수 있어요).
+      계속 안 되면 브라우저 개발자 도구(F12) → Console/Network 탭에서 자세한 오류를 확인할 수 있어요.</p>
+      <button class="icon-btn" onclick="loadWeather(${lat}, ${lon}, '${placeName.replace(/'/g,"\\'")}')">다시 시도</button>`;
+  }
+}
+
+function render(data, placeName){
+  const cur = data.current;
+  const daily = data.daily;
+  const hourly = data.hourly;
+
+  const feels = cur.apparent_temperature ?? cur.temperature_2m;
+  const {text: descText, group} = describeCode(cur.weather_code);
+  const dayMax = daily.temperature_2m_max[0];
+  const dayMin = daily.temperature_2m_min[0];
+  const dayGap = dayMax - dayMin;
+  const precipMax = daily.precipitation_probability_max[0] ?? 0;
+  const isSnowy = ['snow'].includes(describeCode(daily.weather_code[0]).group);
+
+  const band = pickBand(feels);
+
+  // root colors by feels-like temperature
+  const palette = pickPalette(feels);
+  document.documentElement.style.setProperty('--bg-1', palette.bg1);
+  document.documentElement.style.setProperty('--bg-2', palette.bg2);
+  document.documentElement.style.setProperty('--accent', palette.accent);
+
+  const now = new Date();
+  const dateLabel = new Intl.DateTimeFormat('ko-KR', {month:'long', day:'numeric', weekday:'short', timeZone:'Asia/Seoul'}).format(now);
+  const timeLabel = new Intl.DateTimeFormat('ko-KR', {hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Seoul'}).format(now);
+
+  const hourlyHtml = renderHourly(hourly);
+
+  mainEl.innerHTML = `
+    <section class="hero">
+      <div class="hero-top">
+        <span class="place">${placeName} · ${dateLabel}</span>
+        <span class="updated">${timeLabel} 기준</span>
+      </div>
+      <div class="temp-row">
+        ${iconSvg(group,'weather-icon')}
+        <span class="num temp-num">${Math.round(feels)}°</span>
+        <div class="desc-col">
+          <span class="desc-main">${descText} · ${band.label}</span>
+          <span class="feels">실제 기온 ${Math.round(cur.temperature_2m)}° · 체감 ${Math.round(feels)}°</span>
+        </div>
+      </div>
+      <p class="minmax">오늘 최저 ${Math.round(dayMin)}° / 최고 ${Math.round(dayMax)}°</p>
+    </section>
+
+    <p class="section-label">오늘 옷차림</p>
+    ${renderOutfit(band, dayGap)}
+
+    <p class="section-label">챙기면 좋은 것</p>
+    ${umbrellaAdvisory(precipMax, isSnowy)}
+    ${outerGapAdvisory(dayGap)}
+
+    ${hourlyHtml}
+  `;
+}
+
+function renderHourly(hourly){
+  const now = new Date();
+  const nowIso = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString().slice(0,13);
+  let startIdx = hourly.time.findIndex(t => t.slice(0,13) >= nowIso);
+  if(startIdx === -1) startIdx = 0;
+  const slice = hourly.time.slice(startIdx, startIdx+6);
+  if(slice.length === 0) return '';
+
+  const cols = slice.map((t, i)=>{
+    const idx = startIdx + i;
+    const pct = hourly.precipitation_probability[idx] ?? 0;
+    const hour = t.slice(11,13) + '시';
+    const height = Math.max(4, Math.round(pct*0.6));
+    return `<div class="hour-col">
+        <div class="hour-pct">${pct}%</div>
+        <div class="hour-bar-track"><div class="hour-bar" style="height:${height}px"></div></div>
+        <div>${hour}</div>
+      </div>`;
+  }).join('');
+
+  return `<div class="hourly">${cols}</div>`;
+}
+
+function pickPalette(temp){
+  const stops = [
+    {t:-5,  bg1:'#0b1f3a', bg2:'#142a4d', accent:'#8ec9ff'},
+    {t:5,   bg1:'#10233f', bg2:'#1c3a63', accent:'#8ec9ff'},
+    {t:13,  bg1:'#1b2f3f', bg2:'#2c4a55', accent:'#7fd9c4'},
+    {t:20,  bg1:'#2c3320', bg2:'#47522c', accent:'#c9dd6a'},
+    {t:26,  bg1:'#3a2a12', bg2:'#5c3f16', accent:'#ffbb55'},
+    {t:33,  bg1:'#431a12', bg2:'#6b2a17', accent:'#ff8a5c'},
+  ];
+  if(temp <= stops[0].t) return stops[0];
+  if(temp >= stops[stops.length-1].t) return stops[stops.length-1];
+  for(let i=0;i<stops.length-1;i++){
+    if(temp >= stops[i].t && temp <= stops[i+1].t){
+      const ratio = (temp - stops[i].t) / (stops[i+1].t - stops[i].t);
+      return {
+        bg1: mixHex(stops[i].bg1, stops[i+1].bg1, ratio),
+        bg2: mixHex(stops[i].bg2, stops[i+1].bg2, ratio),
+        accent: mixHex(stops[i].accent, stops[i+1].accent, ratio),
+      };
+    }
+  }
+  return stops[2];
+}
+function mixHex(a,b,ratio){
+  const pa = hexToRgb(a), pb = hexToRgb(b);
+  const r = Math.round(pa[0] + (pb[0]-pa[0])*ratio);
+  const g = Math.round(pa[1] + (pb[1]-pa[1])*ratio);
+  const bl = Math.round(pa[2] + (pb[2]-pa[2])*ratio);
+  return `rgb(${r},${g},${bl})`;
+}
+function hexToRgb(hex){
+  const h = hex.replace('#','');
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+
+// initial load: Seoul
+window.addEventListener('DOMContentLoaded', ()=>{
+  const seoulChip = [...chipsEl.children].find(b=>b.dataset.name==='서울');
+  loadWeather(37.5665, 126.9780, '서울', seoulChip);
+});
+</script>
+</body>
+</html>
